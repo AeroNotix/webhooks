@@ -40,7 +40,7 @@ type CreateRepositoryResponse struct {
 	Owner                owner     `json:"owner"`
 	Public               bool      `json:"public"`
 	Path                 string    `json:"path"`
-	PathWithNS           string    `json:path_with_namespace"`
+	PathWithNS           string    `json:"path_with_namespace"`
 	IssuesEnabled        bool      `json:"issues_enabled"`
 	MergeRequestsEnabled bool      `json:"merge_requests_enabled"`
 	WallEnabled          bool      `json:"wall_enabled"`
