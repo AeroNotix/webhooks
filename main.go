@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -33,7 +35,18 @@ type WebHookPost struct {
 }
 
 func HandleWebHook(w http.ResponseWriter, req *http.Request) {
-	fmt.Println(req)
+	if req.Body != nil {
+		b, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		whp := &WebHookPost{}
+		err = json.Unmarshal(b, whp)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		fmt.Println(whp)
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
