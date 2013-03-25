@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -120,8 +119,10 @@ func CreateRepository(r string, extra *map[string]string) (*CreateRepositoryResp
 }
 
 type ConfigFile struct {
+	GitURL   string
 	Endpoint string
 	APIKey   string
+	Username string
 }
 
 var conf ConfigFile
@@ -140,9 +141,9 @@ func main() {
 		return
 	}
 	if *Init != "" {
+		/* Run the Git command to create a new repository locally */
 		cmd := exec.Command("git", "init", *Init)
-		var out bytes.Buffer
-		cmd.Stdout = &out
+		cmd.Stdout = os.Stdout
 		err := cmd.Run()
 		if err != nil {
 			log.Fatal(err)
@@ -151,7 +152,20 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(crr)
+		/* Move into the new sub directory */
+		err = os.Chdir(*Init)
+		if err != nil {
+			log.Fatal(err)
+		}
+		/* Add the remote as the origin of the new repository */
+		cmd = exec.Command(
+			"git", "remote", "add", "origin", conf.GitURL+crr.PathWithNS,
+		)
+		cmd.Stdout = os.Stdout
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 }
