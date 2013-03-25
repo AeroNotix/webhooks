@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -121,14 +125,33 @@ type ConfigFile struct {
 }
 
 var conf ConfigFile
-var Create = flag.String("create", "", "The string of a repository to create")
+var Create = flag.String("create", "", "The name of a repository to create.")
+var Init = flag.String("init", "", "The name of a repository to initialize.")
 
 func main() {
 	flag.Parse()
 	if *Create != "" {
-		err := CreateRepository(*Create, nil)
+		crr, err := CreateRepository(*Create, nil)
 		if err != nil {
-			fmt.Println(err)
+			log.Fatal(err)
+			return
 		}
+		fmt.Println(crr)
+		return
+	}
+	if *Init != "" {
+		cmd := exec.Command("git", "init", *Init)
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+		crr, err := CreateRepository(*Init, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(crr)
+		return
 	}
 }
