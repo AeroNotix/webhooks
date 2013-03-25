@@ -34,6 +34,7 @@ type WebHookPost struct {
 	TotalCommitsCount int64    `json:"total_commits_count"`
 }
 
+/* This is a basic handler which shows an example hook firing */
 func HandleWebHook(w http.ResponseWriter, req *http.Request) {
 	if req.Body != nil {
 		b, err := ioutil.ReadAll(req.Body)
