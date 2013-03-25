@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -30,8 +31,16 @@ func init() {
 }
 
 func CreateRepository(r string, extra *map[string]string) error {
+	path := fmt.Sprintf(conf.Endpoint+"projects?name=%s&", r)
+	vals := url.Values{}
+	if extra != nil {
+		for k, v := range *extra {
+			vals.Add(k, v)
+		}
+	}
+	path = path + vals.Encode()
 	req, err := http.NewRequest("POST",
-		fmt.Sprintf(conf.Endpoint+"projects?name=%s", r),
+		path,
 		nil,
 	)
 	c := http.Client{}
@@ -39,11 +48,6 @@ func CreateRepository(r string, extra *map[string]string) error {
 		return err
 	}
 	req.Header.Add("PRIVATE-TOKEN", conf.APIKey)
-	if extra != nil {
-		for k, v := range *extra {
-			req.Header.Add(k, v)
-		}
-	}
 	resp, err := c.Do(req)
 	if err != nil {
 		return err
