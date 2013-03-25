@@ -51,6 +51,7 @@ func HandleWebHook(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+/* Main function */
 func main() {
 	http.HandleFunc("/", HandleWebHook)
 	fmt.Println(http.ListenAndServe(":12346", nil))
