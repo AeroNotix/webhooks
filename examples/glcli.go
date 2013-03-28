@@ -4,7 +4,6 @@ import (
 	"15.185.120.66/AeroNotix/webhooks"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
