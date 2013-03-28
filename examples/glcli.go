@@ -1,7 +1,7 @@
 package main
 
 import (
-	"15.185.120.66/AeroNotix/gitlabcli"
+	"15.185.120.66/AeroNotix/webhooks"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-var conf gitlabcli.ConfigFile
+var conf webhooks.ConfigFile
 var Create = flag.String("create", "", "The name of a repository to create.")
 var Init = flag.String("init", "", "The name of a repository to initialize.")
 
@@ -37,12 +37,11 @@ func init() {
 func main() {
 	flag.Parse()
 	if *Create != "" {
-		crr, err := gitlabcli.CreateRepository(conf, *Create, nil)
+		crr, err := webhooks.CreateRepository(conf, *Create, nil)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
-		fmt.Println(crr)
 		return
 	}
 	if *Init != "" {
@@ -53,7 +52,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		crr, err := gitlabcli.CreateRepository(conf, *Init, nil)
+		crr, err := webhooks.CreateRepository(conf, *Init, nil)
 		if err != nil {
 			log.Fatal(err)
 		}

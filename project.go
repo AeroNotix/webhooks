@@ -1,4 +1,4 @@
-package gitlabcli
+package webhooks
 
 import (
 	"encoding/json"

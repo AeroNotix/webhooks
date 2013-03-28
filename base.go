@@ -1,4 +1,4 @@
-package gitlabcli
+package webhooks
 
 type ConfigFile struct {
 	GitURL   string
