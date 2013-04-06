@@ -141,7 +141,7 @@ func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*Pro
 	panic("Unreachable!")
 }
 
-func AddUsersToAllProjects() error {
+func AddAllUsersToAllProjects() error {
 	err := os.Chdir("/home/git/gitlab/")
 	if err != nil {
 		return err
@@ -162,11 +162,17 @@ func AddUserToAllProjects(conf ConfigFile, ID int64, a AccessLevel) error {
 		return err
 	}
 	for _, project := range projects {
-		err = project.AddUser(conf, ID, a)
-		if err != nil {
-			log.Println(err)
+		if project.IsPublicallyListed(conf) {
+			err = project.AddUser(conf, ID, a)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
+	return nil
+}
+
+func AddAllUsersToProject(conf ConfigFile, ID int64, a AccessLevel) error {
 	return nil
 }
 
@@ -194,4 +200,18 @@ func (p Project) AddUser(conf ConfigFile, ID int64, a AccessLevel) error {
 	fmt.Println(string(body))
 	return nil
 
+}
+
+func (p Project) IsPublicallyListed(conf ConfigFile) bool {
+	users, err := ListUsersForProject(conf, p.ID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	for _, user := range users {
+		if user.Name == "PublicallyListed" {
+			return true
+		}
+	}
+	return false
 }
