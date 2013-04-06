@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -153,4 +154,44 @@ func AddUsersToAllProjects() error {
 		return err
 	}
 	return nil
+}
+
+func AddUserToAllProjects(conf ConfigFile, ID int64, a AccessLevel) error {
+	projects, err := ListProjects(conf)
+	if err != nil {
+		return err
+	}
+	for _, project := range projects {
+		err = project.AddUser(conf, ID, a)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	return nil
+}
+
+func (p Project) AddUser(conf ConfigFile, ID int64, a AccessLevel) error {
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"%s/projects/%d/members?private_token=%s&user_id=%d&access_level=%d",
+			conf.Endpoint, p.ID, conf.APIKey, ID, a,
+		),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	c := http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(body))
+	return nil
+
 }

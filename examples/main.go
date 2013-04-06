@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 	"webhooks"
 )
 
@@ -61,57 +63,57 @@ type WebHookCommit struct {
 	TotalCommitsCount int64    `json:"total_commits_count"`
 }
 
-type SystemHookProjects struct {
+type SystemHook struct {
 	CreatedAt  string `json:"created_at"`
 	EventName  string `json:"event_name"`
 	Name       string `json:"name"`
-	OwnerEMail string `json:"owner_email"`
+	Email      string `json:"email"`
+	OwnerEmail string `json:"owner_email"`
 	OwnerName  string `json:"owner_name"`
 	Path       string `json:"path"`
 	ID         int64  `json:"project_id"`
 }
 
-type SystemHookUsers struct {
-	CreatedAt  string `json:"created_at"`
-	EventName  string `json:"event_name"`
-	Name       string `json:"name"`
-	OwnerEMail string `json:"email"`
-}
-
-func Users(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Users")
-	if req.Body != nil {
-		b, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		whu := &SystemHookUsers{}
-		err = json.Unmarshal(b, whu)
-		if err != nil {
-			log.Println(err)
-			return
+func (s SystemHook) NewUserID() (int64, error) {
+	users, err := webhooks.ListUsers(conf)
+	if err != nil {
+		return -1, err
+	}
+	for _, user := range users {
+		if user.Email == s.Email {
+			return user.ID, nil
 		}
 	}
-	w.WriteHeader(http.StatusOK)
+	return -1, errors.New(fmt.Sprintf("User: %s not found", s.Email))
 }
 
-func Projects(w http.ResponseWriter, req *http.Request) {
-	if req.Body != nil {
-		b, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		whcp := &SystemHookProjects{}
-		err = json.Unmarshal(b, whcp)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		fmt.Println(whcp)
+func SystemHookEndpoint(w http.ResponseWriter, req *http.Request) {
+	b, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Println(err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
+	go func() {
+		<-time.After(time.Second * 10)
+		hook := &SystemHook{}
+		err = json.Unmarshal(b, hook)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		switch hook.EventName {
+		case "user_create":
+			if id, err := hook.NewUserID(); err == nil {
+				err := webhooks.AddUserToAllProjects(conf, id, webhooks.GUEST)
+				if err != nil {
+					log.Println(err)
+				} else {
+					log.Println(err)
+				}
+			}
+		}
+	}()
 }
 
 func CommitHandler(w http.ResponseWriter, req *http.Request) {
@@ -134,7 +136,7 @@ func CommitHandler(w http.ResponseWriter, req *http.Request) {
 
 /* Main function */
 func main() {
-	http.HandleFunc("/users/", Users)
-	http.HandleFunc("/projects/", Projects)
+	http.HandleFunc("/", SystemHookEndpoint)
+	http.HandleFunc("/commits/", CommitHandler)
 	fmt.Println(http.ListenAndServe(":6060", nil))
 }
