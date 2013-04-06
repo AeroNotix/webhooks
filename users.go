@@ -62,9 +62,30 @@ func CreateUser(conf ConfigFile, u User) error {
 	return nil
 }
 
+func DeleteUser(conf ConfigFile, ID int64) error {
+	req, err := http.NewRequest(
+		"DELETE",
+		fmt.Sprintf("%s/%s/%d?private_token=%s", conf.Endpoint, "users", ID, conf.APIKey),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	c := http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(body))
+	return nil
+}
+
 func AddUserToAllProjects(conf ConfigFile, ID int64) error {
 	for _, project := range ListProjects(conf) {
 
 	}
-	return nil
 }
