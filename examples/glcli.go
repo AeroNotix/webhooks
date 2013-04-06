@@ -13,6 +13,7 @@ import (
 )
 
 var conf webhooks.ConfigFile
+var List = flag.Bool("listusers", false, "List all users.")
 var Create = flag.String("create", "", "The name of a repository to create.")
 var User = flag.Bool("adduser", false, "Add a new user.")
 var DelUser = flag.Bool("deluser", false, "Removes a user.")
@@ -106,9 +107,26 @@ func main() {
 			ProjectLimit: *ProjectLimit,
 		}
 		fmt.Println(webhooks.CreateUser(conf, user))
+		return
 	}
 after_user_create:
 	if *DelUser && *DelUserId != -1 {
 		fmt.Println(webhooks.DeleteUser(conf, *DelUserId))
+		return
+	}
+	if *ListUsers {
+		users, err := webhooks.ListUsers(conf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for _, user := range users {
+			fmt.Println(fmt.Sprintf(
+				`ID: %d
+Email: %s
+Name: %s
+Username: %s`, user.ID, user.Email, user.Username,
+			))
+		}
 	}
 }
