@@ -114,7 +114,7 @@ after_user_create:
 		fmt.Println(webhooks.DeleteUser(conf, *DelUserId))
 		return
 	}
-	if *ListUsers {
+	if *List {
 		users, err := webhooks.ListUsers(conf)
 		if err != nil {
 			fmt.Println(err)
@@ -125,7 +125,7 @@ after_user_create:
 				`ID: %d
 Email: %s
 Name: %s
-Username: %s`, user.ID, user.Email, user.Username,
+Username: %s`, user.ID, user.Email, user.Name, user.Username,
 			))
 		}
 	}
