@@ -11,6 +11,15 @@ import (
 	"os/exec"
 )
 
+type AccessLevel int
+
+const (
+	GUEST     = 10
+	REPORTER  = 20
+	DEVELOPER = 30
+	MASTER    = 40
+)
+
 type owner struct {
 	ID        int64  `json:"id"`
 	Username  string `json:"username"`
