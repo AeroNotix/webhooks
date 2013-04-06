@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
+	"os/exec"
 )
 
 type owner struct {
@@ -17,6 +19,7 @@ type owner struct {
 	State     string `json:"state"`
 	CreatedAt string `json:"created_at"`
 }
+
 type namespace struct {
 	CreatedAt   string  `json:"created_at"`
 	Description *string `json:"description"`
@@ -27,8 +30,9 @@ type namespace struct {
 	UpdatedAt   string  `json:"updated_at"`
 }
 
-type CreateRepositoryResponse struct {
+type Project struct {
 	ID                   int64     `json:"id"`
+	Name                 string    `json:"name"`
 	Description          *string   `json:"description"`
 	DefaultBranch        *string   `json:"default_branch"`
 	Owner                owner     `json:"owner"`
@@ -43,8 +47,40 @@ type CreateRepositoryResponse struct {
 	Namespace            namespace `json:"namespace"`
 }
 
+func ListProjects(conf ConfigFile) ([]Project, error) {
+	path := conf.Endpoint + "projects"
+	req, err := http.NewRequest("GET",
+		path,
+		nil,
+	)
+	c := http.Client{}
+	if err != nil {
+		fmt.Println("new req")
+		return nil, err
+	}
+	req.Header.Add("PRIVATE-TOKEN", conf.APIKey)
+	resp, err := c.Do(req)
+	if err != nil {
+		fmt.Println("do")
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	fmt.Println(resp.StatusCode)
+	switch resp.StatusCode {
+	case http.StatusOK:
+		projects := []Project{}
+		err = json.Unmarshal(body, &projects)
+		if err != nil {
+			return nil, err
+		}
+		return projects, nil
+	}
+	panic("Unreachable!")
+}
+
 /* Will create a new repository using the global conf object. */
-func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*CreateRepositoryResponse, error) {
+func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*Project, error) {
 	path := fmt.Sprintf(conf.Endpoint+"projects?name=%s&", r)
 	vals := url.Values{}
 	if extra != nil {
@@ -59,11 +95,13 @@ func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*Cre
 	)
 	c := http.Client{}
 	if err != nil {
+		fmt.Println("new req")
 		return nil, err
 	}
 	req.Header.Add("PRIVATE-TOKEN", conf.APIKey)
 	resp, err := c.Do(req)
 	if err != nil {
+		fmt.Println("do")
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -73,7 +111,7 @@ func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*Cre
 	}
 	switch resp.StatusCode {
 	case http.StatusCreated:
-		crr := &CreateRepositoryResponse{}
+		crr := &Project{}
 		err = json.Unmarshal(body, crr)
 		if err != nil {
 			return nil, err
@@ -91,5 +129,19 @@ func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*Cre
 		return nil, errors.New(msg.M)
 	}
 	panic("Unreachable!")
+}
 
+func AddUsersToAllProjects() error {
+	err := os.Chdir("/home/git/gitlab/")
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("bundle", "exec", "rake",
+		"gitlab:import:all_users_to_all_projects", "RAILS_ENV=production",
+	)
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }
