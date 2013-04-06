@@ -14,8 +14,11 @@ import (
 
 var conf webhooks.ConfigFile
 var Create = flag.String("create", "", "The name of a repository to create.")
-var User = flag.Bool("adduser", false, "Add a new user")
+var User = flag.Bool("adduser", false, "Add a new user.")
+var DelUser = flag.Bool("deluser", false, "Removes a user.")
+var DelUserId = flag.Int64("userid", -1, "ID of user to remove.")
 var Email = flag.String("email", "", "E-mail address for new user")
+var Name = flag.String("name", "", "Name for new user")
 var Username = flag.String("username", "", "Username for new user")
 var Password = flag.String("password", "", "Password for new user")
 var Skype = flag.String("skype", "", "Skype ID for a new user")
@@ -94,6 +97,7 @@ func main() {
 		}
 		user := webhooks.User{
 			Email:        *Email,
+			Name:         *Name,
 			Username:     *Username,
 			Password:     *Password,
 			Skype:        *Skype,
@@ -104,4 +108,7 @@ func main() {
 		fmt.Println(webhooks.CreateUser(conf, user))
 	}
 after_user_create:
+	if *DelUser && *DelUserId != -1 {
+		fmt.Println(webhooks.DeleteUser(conf, *DelUserId))
+	}
 }
