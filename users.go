@@ -65,7 +65,7 @@ func CreateUser(conf ConfigFile, u User) error {
 func DeleteUser(conf ConfigFile, ID int64) error {
 	req, err := http.NewRequest(
 		"DELETE",
-		fmt.Sprintf("%s/%s/%d?private_token=%s", conf.Endpoint, "users", ID, conf.APIKey),
+		fmt.Sprintf("%s/users/%d?private_token=%s", conf.Endpoint, ID, conf.APIKey),
 		nil,
 	)
 	if err != nil {
