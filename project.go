@@ -157,10 +157,13 @@ func AddAllUsersToAllProjects() error {
 }
 
 func AddUserToAllProjects(conf ConfigFile, ID int64, a AccessLevel) error {
+	oldkey := conf.PublicallyListed
+	conf.APIKey = conf.PublicallyListed
 	projects, err := ListProjects(conf)
 	if err != nil {
 		return err
 	}
+	conf.APIKey = oldkey
 	for _, project := range projects {
 		if project.IsPublicallyListed(conf) {
 			err = project.AddUser(conf, ID, a)
