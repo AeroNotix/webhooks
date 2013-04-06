@@ -61,3 +61,10 @@ func CreateUser(conf ConfigFile, u User) error {
 	fmt.Println(string(body))
 	return nil
 }
+
+func AddUserToAllProjects(conf ConfigFile, ID int64) error {
+	for _, project := range ListProjects(conf) {
+
+	}
+	return nil
+}
