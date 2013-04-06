@@ -83,3 +83,9 @@ func DeleteUser(conf ConfigFile, ID int64) error {
 	fmt.Println(string(body))
 	return nil
 }
+
+func AddUserToAllProjects(conf ConfigFile, ID int64) error {
+	for _, project := range ListProjects(conf) {
+
+	}
+}
