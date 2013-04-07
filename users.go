@@ -97,3 +97,26 @@ func DeleteUser(conf ConfigFile, ID int64) error {
 	fmt.Println(string(body))
 	return nil
 }
+
+func ListUsersForProject(conf ConfigFile, ID int64) ([]User, error) {
+	req, err := http.NewRequest(
+		"GET",
+		fmt.Sprintf("%s/projects/%d/members?private_token=%s", conf.Endpoint, ID, conf.APIKey),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	c := http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	users := []User{}
+	err = json.Unmarshal(body, &users)
+	return users, err
+}

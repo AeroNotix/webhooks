@@ -64,14 +64,19 @@ type WebHookCommit struct {
 }
 
 type SystemHook struct {
-	CreatedAt  string `json:"created_at"`
-	EventName  string `json:"event_name"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	OwnerEmail string `json:"owner_email"`
-	OwnerName  string `json:"owner_name"`
-	Path       string `json:"path"`
-	ID         int64  `json:"project_id"`
+	CreatedAt     string `json:"created_at"`
+	EventName     string `json:"event_name"`
+	Name          string `json:"name"`
+	Email         string `json:"email"`
+	OwnerEmail    string `json:"owner_email"`
+	OwnerName     string `json:"owner_name"`
+	UserEmail     string `json:"user_email"`
+	Username      string `json:"user_name"`
+	Path          string `json:"path"`
+	ID            int64  `json:"project_id"`
+	ProjectAccess string `json:"project_access"`
+	ProjectName   string `json:"project_name"`
+	ProjectPath   string `json:"project_path"`
 }
 
 func (s SystemHook) NewUserID() (int64, error) {
@@ -108,7 +113,14 @@ func SystemHookEndpoint(w http.ResponseWriter, req *http.Request) {
 				err := webhooks.AddUserToAllProjects(conf, id, webhooks.GUEST)
 				if err != nil {
 					log.Println(err)
-				} else {
+				}
+			} else {
+				log.Println(err)
+			}
+		case "user_add_to_team":
+			if hook.Username == "PublicLister" {
+				err := webhooks.AddAllUsersToProject(conf, hook.ID, webhooks.GUEST)
+				if err != nil {
 					log.Println(err)
 				}
 			}
