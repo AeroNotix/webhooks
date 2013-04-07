@@ -33,6 +33,7 @@ var Twitter = flag.String("Twitter", "", "Twitter ID for a new user")
 var ProjectLimit = flag.Int64("projectlimit", 10, "Project Limit for a new user")
 
 func init() {
+	flag.Parse()
 	if flag.NFlag() == 0 {
 		flag.PrintDefaults()
 	}
@@ -43,7 +44,6 @@ func init() {
 	}
 }
 func main() {
-	flag.Parse()
 	if *Create != "" {
 		crr, err := webhooks.CreateRepository(conf, *Create, nil)
 		if err != nil {
