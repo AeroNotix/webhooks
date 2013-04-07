@@ -51,7 +51,7 @@ func main() {
 	if *Create != "" {
 		crr, err := webhooks.CreateRepository(conf, *Create, nil)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Error creating repository: " + err.Error())
 			return
 		}
 		fmt.Printf("New repository created with ID: %d\n", crr.ID)
