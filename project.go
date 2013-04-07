@@ -187,11 +187,23 @@ func (p Project) AddUser(conf ConfigFile, ID int64, a AccessLevel) error {
 	if err != nil {
 		return err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	default:
+		type Message struct {
+			M string `json:"message"`
+		}
+		m := &Message{}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(body, m)
+		if err != nil {
+			return err
+		}
+		return errors.New(m.M)
 	}
-	fmt.Println(string(body))
 	return nil
-
 }
