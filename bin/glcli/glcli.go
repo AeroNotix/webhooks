@@ -10,12 +10,19 @@ import (
 )
 
 var conf webhooks.ConfigFile
+
+/* Projects */
 var ListUsers = flag.Bool("listusers", false, "Lists all users.")
 var ListProjects = flag.Bool("listprojects", false, "Lists all projects.")
 var Create = flag.String("create", "", "The name of a repository to create.")
-var User = flag.Bool("adduser", false, "Add a new user.")
+var Init = flag.String("init", "", "The name of a repository to initialize.")
+
+/* User removal */
 var DelUser = flag.Bool("deluser", false, "Removes a user.")
 var DelUserId = flag.Int64("userid", -1, "ID of user to remove.")
+
+/* User creation */
+var User = flag.Bool("adduser", false, "Enters 'Add new user' mode.")
 var Email = flag.String("email", "", "E-mail address for new user")
 var Name = flag.String("name", "", "Name for new user")
 var Username = flag.String("username", "", "Username for new user")
