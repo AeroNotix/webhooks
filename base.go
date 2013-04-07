@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 type ConfigFile struct {
@@ -52,4 +54,30 @@ func baseRequest(path, method string, body io.Reader) ([]byte, int, error) {
 		return nil, resp.StatusCode, errors.New(m.M)
 	}
 	panic("Unreachable: base.baseRequest")
+}
+
+func ReadConfigFile(path string) (ConfigFile, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return ConfigFile{}, err
+	}
+	body, err := ioutil.ReadAll(f)
+	if err != nil {
+		return ConfigFile{}, err
+	}
+	conf := ConfigFile{}
+	err = json.Unmarshal(body, &conf)
+	return conf, err
+}
+
+func ReadConfigFileFromHome() (ConfigFile, error) {
+	home := os.Getenv("HOME")
+	if home == "" {
+		return ConfigFile{}, errors.New("Cannot determine $HOME variable.")
+	}
+	newconf, err := ReadConfigFile(filepath.Join(home, ".gitlabclirc"))
+	if err != nil {
+		return ConfigFile{}, err
+	}
+	return newconf, nil
 }

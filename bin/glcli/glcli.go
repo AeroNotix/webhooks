@@ -1,14 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"webhooks"
 )
 
@@ -30,21 +27,10 @@ var ProjectLimit = flag.Int64("projectlimit", 10, "Project Limit for a new user"
 var Init = flag.String("init", "", "The name of a repository to initialize.")
 
 func init() {
-	home := os.Getenv("HOME")
-	if home == "" {
-		panic("Cannot determine $HOME variable!")
-	}
-	f, err := os.Open(filepath.Join(home, ".gitlabclirc"))
-	if err != nil {
-		panic(err)
-	}
-	body, err := ioutil.ReadAll(f)
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal(body, &conf)
-	if err != nil {
-		panic(err)
+	if c, err := webhooks.ReadConfigFileFromHome(); err != nil {
+		log.Panic(err)
+	} else {
+		conf = c
 	}
 }
 func main() {
