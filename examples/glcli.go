@@ -9,11 +9,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"webhooks"
 )
 
 var conf webhooks.ConfigFile
-var List = flag.Bool("listusers", false, "List all users.")
+var ListUsers = flag.Bool("listusers", false, "Lists all users.")
+var ListProjects = flag.Bool("listprojects", false, "Lists all projects.")
 var Create = flag.String("create", "", "The name of a repository to create.")
 var User = flag.Bool("adduser", false, "Add a new user.")
 var DelUser = flag.Bool("deluser", false, "Removes a user.")
@@ -109,12 +109,13 @@ func main() {
 		fmt.Println(webhooks.CreateUser(conf, user))
 		return
 	}
-after_user_create:
+
 	if *DelUser && *DelUserId != -1 {
 		fmt.Println(webhooks.DeleteUser(conf, *DelUserId))
 		return
 	}
-	if *List {
+
+	if *ListUsers {
 		users, err := webhooks.ListUsers(conf)
 		if err != nil {
 			fmt.Println(err)
@@ -125,7 +126,31 @@ after_user_create:
 				`ID: %d
 Email: %s
 Name: %s
-Username: %s`, user.ID, user.Email, user.Name, user.Username,
+Username: %s
+-------------------`, user.ID, user.Email, user.Name, user.Username,
+			))
+		}
+	}
+
+	if *ListProjects {
+		projects, err := webhooks.ListProjects(conf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for _, project := range projects {
+			desc := "<empty>"
+			if project.Description != nil {
+				desc = *project.Description
+			}
+			fmt.Println(fmt.Sprintf(
+				`ID: %d
+Name: %s
+Description: %s
+Owner: %s
+Path: %s
+-------------------`,
+				project.ID, project.Name, desc, project.Owner.Username, project.Path,
 			))
 		}
 	}
