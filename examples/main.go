@@ -112,16 +112,16 @@ func SystemHookEndpoint(w http.ResponseWriter, req *http.Request) {
 			if id, err := hook.NewUserID(); err == nil {
 				err := webhooks.AddUserToAllProjects(conf, id, webhooks.GUEST)
 				if err != nil {
-					log.Println(err)
+					log.Println("Error adding user to all projects: " + err.Error())
 				}
 			} else {
-				log.Println(err)
+				log.Println("Error retrieving user ID: " + err.Error())
 			}
 		case "user_add_to_team":
 			if hook.Username == "PublicLister" {
 				err := webhooks.AddAllUsersToProject(conf, hook.ID, webhooks.GUEST)
 				if err != nil {
-					log.Println(err)
+					log.Println("Error adding all users to project: " + err.Error())
 				}
 			}
 		}
