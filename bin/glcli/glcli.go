@@ -1,7 +1,6 @@
 package main
 
 import (
-	"15.185.120.66/AeroNotix/webhooks"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"webhooks"
 )
 
 var conf webhooks.ConfigFile
