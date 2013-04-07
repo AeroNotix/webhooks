@@ -2,9 +2,7 @@ package webhooks
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -58,40 +56,26 @@ type Project struct {
 }
 
 func ListProjects(conf ConfigFile) ([]Project, error) {
-	path := conf.Endpoint + "projects"
-	req, err := http.NewRequest("GET",
+	path := fmt.Sprintf("%s/projects?private_token=%s", conf.Endpoint, conf.APIKey)
+	body, statuscode, err := baseRequest(
 		path,
+		"GET",
 		nil,
 	)
-	c := http.Client{}
-	if err != nil {
-		fmt.Println("new req")
+	if err != nil || statuscode != http.StatusOK {
 		return nil, err
 	}
-	req.Header.Add("PRIVATE-TOKEN", conf.APIKey)
-	resp, err := c.Do(req)
+	projects := []Project{}
+	err = json.Unmarshal(body, &projects)
 	if err != nil {
-		fmt.Println("do")
 		return nil, err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Println(resp.StatusCode)
-	switch resp.StatusCode {
-	case http.StatusOK:
-		projects := []Project{}
-		err = json.Unmarshal(body, &projects)
-		if err != nil {
-			return nil, err
-		}
-		return projects, nil
-	}
-	panic("Unreachable!")
+	return projects, nil
 }
 
 /* Will create a new repository using the global conf object. */
 func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*Project, error) {
-	path := fmt.Sprintf(conf.Endpoint+"projects?name=%s&", r)
+	path := fmt.Sprintf("%s/projects?private_token=%s&projects&name=%s&", conf.Endpoint, conf.APIKey, r)
 	vals := url.Values{}
 	if extra != nil {
 		for k, v := range *extra {
@@ -99,46 +83,17 @@ func CreateRepository(conf ConfigFile, r string, extra *map[string]string) (*Pro
 		}
 	}
 	path = path + vals.Encode()
-	req, err := http.NewRequest("POST",
+	body, statuscode, err := baseRequest(
 		path,
+		"POST",
 		nil,
 	)
-	c := http.Client{}
-	if err != nil {
-		fmt.Println("new req")
+	if err != nil || statuscode != http.StatusCreated {
 		return nil, err
 	}
-	req.Header.Add("PRIVATE-TOKEN", conf.APIKey)
-	resp, err := c.Do(req)
-	if err != nil {
-		fmt.Println("do")
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	switch resp.StatusCode {
-	case http.StatusCreated:
-		crr := &Project{}
-		err = json.Unmarshal(body, crr)
-		if err != nil {
-			return nil, err
-		}
-		return crr, nil
-	default:
-		type Message struct {
-			M string `json:"message"`
-		}
-		var msg Message
-		err = json.Unmarshal(body, &msg)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New(msg.M)
-	}
-	panic("Unreachable!")
+	project := &Project{}
+	err = json.Unmarshal(body, project)
+	return project, err
 }
 
 func AddAllUsersToAllProjects() error {
@@ -180,39 +135,16 @@ func AddAllUsersToProject(conf ConfigFile, ID int64, a AccessLevel) error {
 }
 
 func (p Project) AddUser(conf ConfigFile, ID int64, a AccessLevel) error {
-	req, err := http.NewRequest(
-		"POST",
+	_, statuscode, err := baseRequest(
 		fmt.Sprintf(
 			"%s/projects/%d/members?private_token=%s&user_id=%d&access_level=%d",
 			conf.Endpoint, p.ID, conf.APIKey, ID, a,
 		),
+		"POST",
 		nil,
 	)
-	if err != nil {
+	if err != nil || statuscode != http.StatusOK {
 		return err
-	}
-	c := http.Client{}
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return nil
-	default:
-		type Message struct {
-			M string `json:"message"`
-		}
-		m := &Message{}
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(body, m)
-		if err != nil {
-			return err
-		}
-		return errors.New(m.M)
 	}
 	return nil
 }

@@ -2,9 +2,7 @@ package webhooks
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -29,13 +27,11 @@ type User struct {
 }
 
 func ListUsers(conf ConfigFile) ([]User, error) {
-	resp, err := http.Get(
+	body, _, err := baseRequest(
 		fmt.Sprintf("%s/%s?private_token=%s", conf.Endpoint, "users", conf.APIKey),
+		"GET",
+		nil,
 	)
-	if err != nil {
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -48,72 +44,36 @@ func CreateUser(conf ConfigFile, u User) error {
 	if err != nil {
 		return err
 	}
-	resp, err := http.Post(
+	_, statuscode, err := baseRequest(
 		fmt.Sprintf("%s/%s?private_token=%s", conf.Endpoint, "users", conf.APIKey),
-		"application/json", strings.NewReader(string(jsonstr)),
+		"POST",
+		strings.NewReader(string(jsonstr)),
 	)
-	if err != nil {
+	if err != nil || statuscode != http.StatusCreated {
 		return err
-	}
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return nil
-	default:
-		type Message struct {
-			M string `json:"message"`
-		}
-		m := &Message{}
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(body, m)
-		if err != nil {
-			return err
-		}
-		return errors.New("Error creating user: " + m.M)
 	}
 	return nil
 }
 
 func DeleteUser(conf ConfigFile, ID int64) error {
-	req, err := http.NewRequest(
+	_, statuscode, err := baseRequest(
 		"DELETE",
 		fmt.Sprintf("%s/users/%d?private_token=%s", conf.Endpoint, ID, conf.APIKey),
 		nil,
 	)
-	if err != nil {
+	if err != nil || statuscode != http.StatusOK {
 		return err
 	}
-	c := http.Client{}
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(body))
 	return nil
 }
 
 func ListUsersForProject(conf ConfigFile, ID int64) ([]User, error) {
-	req, err := http.NewRequest(
-		"GET",
+	body, statuscode, err := baseRequest(
 		fmt.Sprintf("%s/projects/%d/members?private_token=%s", conf.Endpoint, ID, conf.APIKey),
+		"GET",
 		nil,
 	)
-	if err != nil {
-		return nil, err
-	}
-	c := http.Client{}
-	resp, err := c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if err != nil || statuscode != http.StatusOK {
 		return nil, err
 	}
 	users := []User{}
