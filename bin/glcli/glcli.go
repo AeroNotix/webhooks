@@ -31,9 +31,11 @@ var Skype = flag.String("skype", "", "Skype ID for a new user")
 var LinkedIn = flag.String("linkedin", "", "LinkedIn ID for a new user")
 var Twitter = flag.String("Twitter", "", "Twitter ID for a new user")
 var ProjectLimit = flag.Int64("projectlimit", 10, "Project Limit for a new user")
-var Init = flag.String("init", "", "The name of a repository to initialize.")
 
 func init() {
+	if flag.NFlag() == 0 {
+		flag.PrintDefaults()
+	}
 	if c, err := webhooks.ReadConfigFileFromHome(); err != nil {
 		log.Panic(err)
 	} else {
