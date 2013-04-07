@@ -93,7 +93,7 @@ func main() {
 		} {
 			if field == "" {
 				fmt.Println(errmsg)
-				goto after_user_create
+				return
 			}
 		}
 		user := webhooks.User{
