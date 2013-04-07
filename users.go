@@ -2,6 +2,7 @@ package webhooks
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -54,11 +55,24 @@ func CreateUser(conf ConfigFile, u User) error {
 	if err != nil {
 		return err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	default:
+		type Message struct {
+			M string `json:"message"`
+		}
+		m := &Message{}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(body, m)
+		if err != nil {
+			return err
+		}
+		return errors.New("Error creating user: " + m.M)
 	}
-	fmt.Println(string(body))
 	return nil
 }
 
